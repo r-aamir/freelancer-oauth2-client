@@ -1,6 +1,8 @@
-<?php namespace freelancer\OAuth2\Client\Provider;
+<?php
 
-use UnexpectedValueException;
+namespace Sydefz\OAuth2\Client\Provider;
+
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Provider\AbstractProvider;
@@ -21,13 +23,13 @@ class FreelancerIdentity extends AbstractProvider {
     private $responseError = 'message';
     private $ownerId = 'email';
     /**
-     * @throws UnexpectedValueException
+     * @throws FreelancerIdentityException
      */
     public function __construct($options = []) {
         parent::__construct($options);
 
         if (!isset($options['baseUri'])) {
-            throw new UnexpectedValueException('Base URI required.');
+            throw new FreelancerIdentityException('Base URI required.');
         } else {
             $this->baseUri = $options['baseUri'];
         }
@@ -92,12 +94,12 @@ class FreelancerIdentity extends AbstractProvider {
     }
 
     /**
-     * @throws IdentityProviderException when response contains error/exception
+     * @throws FreelancerIdentityException when response contains error/exception
      */
     protected function checkResponse(ResponseInterface $response, $data) {
         if (!empty($data[$this->responseCode])) {
             $error = $data[$this->responseError];
-            throw new IdentityProviderException($error, 0, $data);
+            throw new FreelancerIdentityException($error, 0, $data);
         }
     }
 
@@ -105,3 +107,5 @@ class FreelancerIdentity extends AbstractProvider {
         return new GenericResourceOwner($response, $response[$this->ownerId]);
     }
 }
+
+class FreelancerIdentityException extends Exception {}

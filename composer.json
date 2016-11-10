@@ -15,8 +15,8 @@
     ],
     "minimum-stability": "dev",
     "autoload": {
-        "psr-4": {
-            "freelancer\\OAuth2\\Client\\Provider\\": "src/"
+        "psr-0": {
+            "Sydefz\\OAuth2\\Client\\Provider\\": "src/"
         }
     }
 }
