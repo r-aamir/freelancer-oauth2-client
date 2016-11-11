@@ -138,28 +138,20 @@ Via Composer
 adding the following to your composer.json
 ``` bash
 {
+    "require": {
+        "paul/freelancer-oauth2-client": "^1.1.0"
+    },
     "repositories": [{
-        "type": "package",
-        "package": {
-            "name": "paul/freelancer-oauth2-client",
-            "version": "1.1.0",
-            "source": {
-            "url": "git@git.freelancer.com:paul/freelancer-oauth2-client.git",
-            "type": "git",
-            "reference": "master"
-        },
-        "autoload": {
-            "psr-0": {
-                "Sydefz\\OAuth2\\Client\\Provider\\": "src/"
-            }
-        }
+        "type": "git",
+        "url": "git@git.freelancer.com:paul/freelancer-oauth2-client.git"
     }]
 }
+
 ```
 
 then run
 ``` bash
-$ composer update -o
+$ composer install -o
 ```
 
 ## License
