@@ -15,6 +15,8 @@ The following versions of PHP are supported.
 
 ### Initialize Freelancer OAuth2 Provider
 
+Note: Create your app from http://accounts.syd1.fln-dev.net/settings/create_app
+
 ``` php
 try {
     $provider = new FreelancerIdentity([
