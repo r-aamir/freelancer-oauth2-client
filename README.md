@@ -21,7 +21,7 @@ try {
         'clientId' => '<your-client-id>',
         'clientSecret' => '<your-client-secret>',
         'redirectUri' => '<your-client-redirect-uri>',
-        'baseUri' => '<freelancer-service-provider-base-uri>',
+        'baseUri' => 'http://accounts.syd1.fln-dev.net',
         'scopes' => [<scopes-array>], // Optional
         'prompt' => [<prompt-step-array>], // Optional
         'advanced_scopes' => [<advanced-scopes-array>], // Optional
