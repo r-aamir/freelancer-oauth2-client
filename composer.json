@@ -1,7 +1,7 @@
 {
-    "name": "sydefz/freelancer-oauth2-client",
+    "name": "paul/freelancer-oauth2-client",
     "description": "Freelancer OAuth 2.0 Client Provider",
-    "type": "library",
+    "type": "package",
     "require": {
         "php": ">=5.5.0",
         "league/oauth2-client": "^1.4"

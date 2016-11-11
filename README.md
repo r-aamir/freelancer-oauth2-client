@@ -15,15 +15,18 @@ The following versions of PHP are supported.
 
 ### Initialize Freelancer OAuth2 Provider
 
-```php
+``` php
 try {
     $provider = new FreelancerIdentity([
         'clientId' => '<your-client-id>',
         'clientSecret' => '<your-client-secret>',
         'redirectUri' => '<your-client-redirect-uri>',
-        'baseUri' => '<freelancer-service-provider-base-uri>'
+        'baseUri' => '<freelancer-service-provider-base-uri>',
+        'scopes' => [<scopes-array>], // Optional
+        'prompt' => [<prompt-step-array>], // Optional
+        'advanced_scopes' => [<advanced-scopes-array>], // Optional
     ]);
-} catch (UnexpectedValueException $e) {
+} catch (FreelancerIdentityException $e) {
     // Failed to initialize freelancer identity provider
     exit($e->getMessage());
 }
@@ -31,9 +34,10 @@ try {
 
 ### Authorization Code Grant
 
-The authorization code grant type is the most common grant type used when authenticating users with a third-party service. This grant type utilizes a client (this library), a server (the service provider), and a resource owner (the user with credentials to a protected—or owned—resource) to request access to resources owned by the user. This is often referred to as 3-legged OAuth, since there are three parties involved.
+The authorization code grant type is the most common grant type used when authenticating users with freelancer service. This grant type utilizes a client (this library), a server (the service provider), and a resource owner (the user with credentials to a protected—or owned—resource) to request access to resources owned by the user. This is often referred to as 3-legged OAuth, since there are three parties involved.
 
-```php
+``` php
+
 // Check given error
 if (isset($_GET['error'])) {
     exit($_GET['error']);
@@ -41,7 +45,6 @@ if (isset($_GET['error'])) {
     // If we don't have an authorization code then get one
     // Fetch the authorization URL from the provider; this returns the
     // urlAuthorize option and generates and applies any necessary parameters
-    // (e.g. state).
     $authorizationUrl = $provider->getAuthorizationUrl();
 
     // Redirect the user to the authorization URL.
@@ -56,29 +59,40 @@ if (isset($_GET['error'])) {
 
         // We have an access token, which we may use in authenticated
         // requests against the service provider's API.
-        echo $accessToken->getToken() . "<br>";
-        echo $accessToken->getRefreshToken() . "<br>";
-        echo $accessToken->getExpires() . "<br>";
-        echo ($accessToken->hasExpired() ? 'expired' : 'not expired') . "<br>";
+        echo $accessToken->getToken() . "\n";
+        echo $accessToken->getRefreshToken() . "\n";
+        echo $accessToken->getExpires() . "\n";
+        echo ($accessToken->hasExpired() ? 'expired' : 'not expired') . "\n";
 
         // Using the access token, we may look up details about the
         // resource owner.
         $resourceOwner = $provider->getResourceOwner($accessToken);
         var_export($resourceOwner);
-
-        // The provider provides a way to get an authenticated API request for
-        // the service, using the access token
-        $request = $provider->getAuthenticatedRequest(
-            'GET',
-            $provider->baseUri.'/api/v1/user/profile_image',
-            $accessToken
-        );
-        $response = $provider->getResponse($request);
-        var_export($response);
-    } catch (IdentityProviderException $e) {
+    } catch (FreelancerIdentityException $e) {
         // Failed to get the access token or user details.
         exit($e->getMessage());
     }
+}
+```
+
+### Making an authorized request to freelancer service.
+
+``` php
+
+try {
+    // The provider provides a way to get an authenticated API request for
+    // the service, using the access token
+    $request = $provider->getAuthenticatedRequest(
+        'GET',
+        $provider->baseUri.'/api/v1/user/<user_id>',
+        $accessToken
+    );
+    $response = $provider->getResponse($request);
+    var_export($response);
+} catch (FreelancerIdentityException $e) {
+
+    // Failed to get response
+    exit($e->getMessage());
 }
 ```
 
@@ -86,7 +100,8 @@ if (isset($_GET['error'])) {
 
 Once your application is authorized, you can refresh an expired token using a refresh token rather than going through the entire process of obtaining a brand new token. To do so, simply reuse this refresh token from your data store to request a refresh.
 
-```php
+``` php
+
 $existingAccessToken = getAccessTokenFromYourDataStore();
 
 if ($existingAccessToken->hasExpired()) {
@@ -102,15 +117,13 @@ if ($existingAccessToken->hasExpired()) {
 
 When your application is acting on its own behalf to access resources it controls/owns in a service provider, it may use the client credentials grant type. This is best used when the credentials for your application are stored privately and never exposed (e.g. through the web browser, etc.) to end-users. This grant type functions similarly to the resource owner password credentials grant type, but it does not request a user's username or password. It uses only the client ID and secret issued to your client by the service provider.
 
-Unlike earlier examples, the following does not work against a functioning demo service provider. It is provided for the sake of example only.
-
 ``` php
 try {
 
     // Try to get an access token using the client credentials grant.
     $accessToken = $provider->getAccessToken('client_credentials');
 
-} catch (\League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+} catch (FreelancerIdentityException $e) {
 
     // Failed to get the access token
     exit($e->getMessage());
@@ -122,10 +135,33 @@ try {
 
 Via Composer
 
+adding the following to your composer.json
 ``` bash
-$ composer require sydefz/freelancer-oauth2-client
+{
+    "repositories": [{
+        "type": "package",
+        "package": {
+            "name": "paul/freelancer-oauth2-client",
+            "version": "1.1.0",
+            "source": {
+            "url": "git@git.freelancer.com:paul/freelancer-oauth2-client.git",
+            "type": "git",
+            "reference": "master"
+        },
+        "autoload": {
+            "psr-0": {
+                "Sydefz\\OAuth2\\Client\\Provider\\": "src/"
+            }
+        }
+    }]
+}
+```
+
+then run
+``` bash
+$ composer update -o
 ```
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/sydefz/freelancer-oauth2-client/blob/master/LICENSE) for more information.
+The MIT License (MIT). Please see [License File](https://git.freelancer.com/paul/freelancer-oauth2-client/raw/master/LICENSE) for more information.

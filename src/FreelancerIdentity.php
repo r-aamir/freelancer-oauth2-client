@@ -23,7 +23,7 @@ class FreelancerIdentity extends AbstractProvider {
     private $responseError = 'message';
     private $ownerId = 'email';
     /**
-     * @throws FreelancerIdentityException
+     * @throws FreelancerIdentityException when no baseUri option
      */
     public function __construct($options = []) {
         parent::__construct($options);
