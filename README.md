@@ -15,23 +15,18 @@ The following versions of PHP are supported.
 
 ### Initialize Freelancer OAuth2 Provider
 
-Note: Create your app from http://accounts.syd1.fln-dev.net/settings/create_app
+Note: Create your app from http://accounts.syd1.fln-dev.net/settings/create_app before you start
 
 ``` php
-try {
-    $provider = new FreelancerIdentity([
-        'clientId' => '<your-client-id>',
-        'clientSecret' => '<your-client-secret>',
-        'redirectUri' => '<your-client-redirect-uri>',
-        'baseUri' => 'http://accounts.syd1.fln-dev.net',
-        'scopes' => [<scopes-array>], // Optional
-        'prompt' => [<prompt-step-array>], // Optional
-        'advanced_scopes' => [<advanced-scopes-array>], // Optional
-    ]);
-} catch (FreelancerIdentityException $e) {
-    // Failed to initialize freelancer identity provider
-    exit($e->getMessage());
-}
+$provider = new FreelancerIdentity([
+    'clientId' => '<your-client-id>',
+    'clientSecret' => '<your-client-secret>',
+    'redirectUri' => '<your-client-redirect-uri>',
+    'scopes' => [<scopes-array>], // Optional
+    'prompt' => [<prompt-step-array>], // Optional
+    'advanced_scopes' => [<advanced-scopes-array>], // Optional
+    'test' => true // to play with accounts.syd1.fln-dev.net
+]);
 ```
 
 ### Authorization Code Grant
@@ -59,8 +54,13 @@ if (isset($_GET['error'])) {
             'code' => $_GET['code']
         ]);
 
+        // Store this bearer token in your data store for future use
+        // including these information
+        // token_type, expires_in, scope, access_token and refresh_token
+        storeAccessTokenInYourDataStore($accessToken);
+
         // We have an access token, which we may use in authenticated
-        // requests against the service provider's API.
+        // requests against the freelancer identity and freelancer API.
         echo $accessToken->getToken() . "\n";
         echo $accessToken->getRefreshToken() . "\n";
         echo $accessToken->getExpires() . "\n";
@@ -77,42 +77,31 @@ if (isset($_GET['error'])) {
 }
 ```
 
-### Making an authorized request to freelancer service.
-
-``` php
-
-try {
-    // The provider provides a way to get an authenticated API request for
-    // the service, using the access token
-    $request = $provider->getAuthenticatedRequest(
-        'GET',
-        $provider->baseUri.'/api/v1/user/<user_id>',
-        $accessToken
-    );
-    $response = $provider->getResponse($request);
-    var_export($response);
-} catch (FreelancerIdentityException $e) {
-
-    // Failed to get response
-    exit($e->getMessage());
-}
-```
-
 ### Refreshing a Token
 
 Once your application is authorized, you can refresh an expired token using a refresh token rather than going through the entire process of obtaining a brand new token. To do so, simply reuse this refresh token from your data store to request a refresh.
 
 ``` php
+$provider = new FreelancerIdentity([
+    'clientId' => '<your-client-id>',
+    'test' => true // to play with accounts.syd1.fln-dev.net
+]);
+$existingAccessTokenArray = getAccessTokenFromYourDataStore();
+$provider->setAccessTokenFromArray($existingAccessTokenArray);
 
-$existingAccessToken = getAccessTokenFromYourDataStore();
+try {
+    if ($provider->accessToken->hasExpired()) {
+        $newAccessToken = $provider->getAccessToken('refresh_token', [
+            'refresh_token' => $provider->accessToken->getRefreshToken()
+        ]);
 
-if ($existingAccessToken->hasExpired()) {
-    $newAccessToken = $provider->getAccessToken('refresh_token', [
-        'refresh_token' => $existingAccessToken->getRefreshToken()
-    ]);
-
-    // Purge old access token and store new access token to your data store.
+        // Purge old access token and store new access token to your data store.
+    }
+} catch (FreelancerIdentityException $e) {
+    // Failed to refresh token
+    exit($e->getMessage());
 }
+
 ```
 
 ### Client Credentials Grant
@@ -120,16 +109,57 @@ if ($existingAccessToken->hasExpired()) {
 When your application is acting on its own behalf to access resources it controls/owns in a service provider, it may use the client credentials grant type. This is best used when the credentials for your application are stored privately and never exposed (e.g. through the web browser, etc.) to end-users. This grant type functions similarly to the resource owner password credentials grant type, but it does not request a user's username or password. It uses only the client ID and secret issued to your client by the service provider.
 
 ``` php
+
 try {
 
     // Try to get an access token using the client credentials grant.
     $accessToken = $provider->getAccessToken('client_credentials');
+
+    // Store this bearer token in your data store for future use
+    // including these information
+    // token_type, expires_in, scope and access_token
+    storeAccessTokenInYourDataStore($accessToken);
 
 } catch (FreelancerIdentityException $e) {
 
     // Failed to get the access token
     exit($e->getMessage());
 
+}
+```
+
+### Making an authorized request to freelancer service.
+
+``` php
+
+try {
+    $provider = new FreelancerIdentity([
+        'test' => true // to play with accounts.syd1.fln-dev.net
+    ]);
+    $tokenArray = getAccessTokenFromYourDataStore();
+    $provider->setTokenFromArray($tokenArray);
+
+    // The provider provides a way to make an authenticated request
+    // to freelancer OAuth2 provider
+    $request = $provider->getAuthenticatedRequest(
+        'GET',
+        $provider->baseUri.'/api/v1/user/<user_id>'
+    );
+    $response = $provider->getResponse($request);
+    var_export($response);
+
+    // The provider also provides a way to make an authenticated
+    // request for the api service
+    $request = $provider->getAuthenticatedRequest(
+        'GET',
+        $provider->apiBaseUri.'/whoami'
+    );
+    $response = $provider->getResponse($request);
+    var_export($response);
+} catch (FreelancerIdentityException $e) {
+
+    // Failed to get response
+    exit($e->getMessage());
 }
 ```
 
@@ -141,7 +171,7 @@ adding the following to your composer.json
 ``` bash
 {
     "require": {
-        "paul/freelancer-oauth2-client": "^1.1.0"
+        "paul/freelancer-oauth2-client": "^1.1.1"
     },
     "repositories": [{
         "type": "git",
