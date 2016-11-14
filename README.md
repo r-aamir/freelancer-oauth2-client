@@ -171,7 +171,7 @@ adding the following to your composer.json
 ``` bash
 {
     "require": {
-        "paul/freelancer-oauth2-client": "^1.1.1"
+        "paul/freelancer-oauth2-client": "^1.1.2"
     },
     "repositories": [{
         "type": "git",
