@@ -55,7 +55,6 @@ class FreelancerIdentity extends AbstractProvider {
         } catch (InvalidArgumentException $e) {
             throw new FreelancerIdentityException($e->getMessage());
         } catch (Exception $e) {
-            var_dump($e->getMessage());
             throw new FreelancerIdentityException('Unknown error occurred.');
         }
     }
