@@ -226,8 +226,8 @@ adding the following to your composer.json
         "paul/freelancer-oauth2-client": "^1.1.2"
     },
     "repositories": [{
-        "type": "git",
-        "url": "git@git.freelancer.com:paul/freelancer-oauth2-client.git"
+        "type": "vcs",
+        "url": "https://git.freelancer.com/paul/freelancer-oauth2-client.git"
     }]
 }
 
