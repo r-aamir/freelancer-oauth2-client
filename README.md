@@ -15,6 +15,9 @@ The following versions of PHP are supported.
 
 ### Initialize Freelancer OAuth2 Provider
 
+It is recommended to have an understanding of oauth before using this client. For an introduction to Oauth2, see
+https://www.digitalocean.com/community/tutorials/an-introduction-to-oauth-2, or come and ask the Identity team (Sam Harding, Paul, or Nick Glynn).
+
 Note: Create your application from http://accounts.syd1.fln-dev.net/settings/create_app
 and get it approved before you start
 
