@@ -15,16 +15,17 @@ The following versions of PHP are supported.
 
 ### Initialize Freelancer OAuth2 Provider
 
-Note: Create your app from http://accounts.syd1.fln-dev.net/settings/create_app before you start
+Note: Create your application from http://accounts.syd1.fln-dev.net/settings/create_app
+and get it approved before you start
 
 ``` php
 $provider = new FreelancerIdentity([
     'clientId' => '<your-client-id>',
     'clientSecret' => '<your-client-secret>',
     'redirectUri' => '<your-client-redirect-uri>',
-    'scopes' => [<scopes-array>], // Optional
-    'prompt' => [<prompt-step-array>], // Optional
-    'advanced_scopes' => [<advanced-scopes-array>], // Optional
+    'scopes' => [<scopes-array>], // Optional only needed when retrieve access token
+    'prompt' => [<prompt-step-array>], // Optional only needed when retrieve access token
+    'advanced_scopes' => [<advanced-scopes-array>], // Optional only needed when retrieve access token
     'test' => true // to play with accounts.syd1.fln-dev.net
 ]);
 ```
@@ -77,6 +78,30 @@ if (isset($_GET['error'])) {
 }
 ```
 
+### Client Credentials Grant
+
+When your application is acting on its own behalf to access resources it controls/owns in a service provider, it may use the client credentials grant type. This is best used when the credentials for your application are stored privately and never exposed (e.g. through the web browser, etc.) to end-users. This grant type functions similarly to the resource owner password credentials grant type, but it does not request a user's username or password. It uses only the client ID and secret issued to your client by the service provider.
+
+``` php
+
+try {
+
+    // Try to get an access token using the client credentials grant.
+    $accessToken = $provider->getAccessToken('client_credentials');
+
+    // Store this bearer token in your data store for future use
+    // including these information
+    // token_type, expires_in, scope and access_token
+    storeAccessTokenInYourDataStore($accessToken);
+
+} catch (FreelancerIdentityException $e) {
+
+    // Failed to get the access token
+    exit($e->getMessage());
+
+}
+```
+
 ### Refreshing a Token
 
 Once your application is authorized, you can refresh an expired token using a refresh token rather than going through the entire process of obtaining a brand new token. To do so, simply reuse this refresh token from your data store to request a refresh.
@@ -104,58 +129,82 @@ try {
 
 ```
 
-### Client Credentials Grant
+### Making an authorized request to freelancer identity service.
 
-When your application is acting on its own behalf to access resources it controls/owns in a service provider, it may use the client credentials grant type. This is best used when the credentials for your application are stored privately and never exposed (e.g. through the web browser, etc.) to end-users. This grant type functions similarly to the resource owner password credentials grant type, but it does not request a user's username or password. It uses only the client ID and secret issued to your client by the service provider.
+Once your application is authorized, you can hit freelancer identity endpoints
+to retrieve user, application and organization information.
+information.
 
-``` php
-
-try {
-
-    // Try to get an access token using the client credentials grant.
-    $accessToken = $provider->getAccessToken('client_credentials');
-
-    // Store this bearer token in your data store for future use
-    // including these information
-    // token_type, expires_in, scope and access_token
-    storeAccessTokenInYourDataStore($accessToken);
-
-} catch (FreelancerIdentityException $e) {
-
-    // Failed to get the access token
-    exit($e->getMessage());
-
-}
-```
-
-### Making an authorized request to freelancer service.
+TODO: Create a list of available identity endpoints
 
 ``` php
 
+$provider = new FreelancerIdentity([
+    'test' => true // to play with accounts.syd1.fln-dev.net
+]);
 try {
-    $provider = new FreelancerIdentity([
-        'test' => true // to play with accounts.syd1.fln-dev.net
-    ]);
     $tokenArray = getAccessTokenFromYourDataStore();
     $provider->setTokenFromArray($tokenArray);
 
-    // The provider provides a way to make an authenticated request
-    // to freelancer OAuth2 provider
-    $request = $provider->getAuthenticatedRequest(
-        'GET',
-        $provider->baseUri.'/api/v1/user/<user_id>'
-    );
-    $response = $provider->getResponse($request);
-    var_export($response);
+    if (!$provider->accessToken->hasExpired()) {
+        // The provider provides a way to make an authenticated request
+        // to freelancer OAuth2 provider
+        $request = $provider->getAuthenticatedRequest(
+            'GET',
+            $provider->baseUri.'/oauth/me'
+        );
+        $response = $provider->getResponse($request);
+        var_export($response);
+    } else {
+        // refresh your token
+    }
+} catch (FreelancerIdentityException $e) {
+    // Failed to get response
+    exit($e->getMessage());
+}
+```
 
-    // The provider also provides a way to make an authenticated
-    // request for the api service
-    $request = $provider->getAuthenticatedRequest(
-        'GET',
-        $provider->apiBaseUri.'/whoami'
-    );
-    $response = $provider->getResponse($request);
-    var_export($response);
+### Making an authorized request to freelancer API service.
+
+In order to user freelancer API from you applications, your application needs to be
+created with certain advanced scopes then you can request user to grant these
+advanced scopes when retrieve access token.
+
+Take api.accounts.fln-dev.net/api/users/0.1/users/self for example
+Your application needs to have 'fln:user:personal' advanced scopes on creation, and your
+user will need to consent on that scope so the granted access token now have the permission
+to call this endpoint.
+
+TODO: Create a list of available advanced scopes and associated api endpoints
+
+``` php
+
+$provider = new FreelancerIdentity([
+    'test' => true // to play with accounts.syd1.fln-dev.net
+]);
+try {
+    $tokenArray = getAccessTokenFromYourDataStore();
+    $provider->setTokenFromArray($tokenArray);
+
+    if (!$provider->accessToken->hasExpired()) {
+        // The provider also provides a way to make an authenticated
+        // request for the api service
+        $request = $provider->getAuthenticatedRequest(
+            'GET',
+            $provider->apiBaseUri.'/whoami'
+        );
+        $response = $provider->getResponse($request);
+        var_export($response);
+
+        $request = $provider->getAuthenticatedRequest(
+            'GET',
+            $provider->apiBaseUri.'/users/0.1/users/self?avatar=true'
+        );
+        $response = $provider->getResponse($request);
+        var_export($response);
+    } else {
+        // refresh your token
+    }
 } catch (FreelancerIdentityException $e) {
 
     // Failed to get response
