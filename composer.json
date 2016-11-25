@@ -1,0 +1,22 @@
+{
+    "name": "sydefz/freelancer-oauth2-client",
+    "description": "Freelancer OAuth 2.0 Client Provider",
+    "type": "package",
+    "require": {
+        "php": ">=5.5.0",
+        "league/oauth2-client": "^1.4"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Xinyang Zhang",
+            "email": "paul@freelancer.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-0": {
+            "Sydefz\\OAuth2\\Client\\Provider\\": "src/"
+        }
+    }
+}
