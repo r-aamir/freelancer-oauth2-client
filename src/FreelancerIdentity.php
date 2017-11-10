@@ -13,13 +13,25 @@ use League\OAuth2\Client\Grant\Exception\InvalidGrantException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 
 class FreelancerIdentity extends AbstractProvider {
+    const ERROR_MAPPING = [
+        'INVALID_ATTRIBUTE' => 0,
+        'MISSING_REQUIRED_FIELDS' => 1,
+        'INTEGRITY_ERROR' => 2,
+        'UNAUTHORISED_ACTION' => 3,
+        'ORGANISATION_ALREADY_EXISTS' => 4,
+        'MISSING_FIELDS' => 5,
+        'UNKNOWN_ERROR' => 6,
+        'NOT_FOUND' => 7,
+        'INVALID_CLAUSE' => 8,
+        'DUPLICATE_ENTRY' => 9,
+    ];
     /**
      * scopes, prompt and advanced_scopes can be modified by
      * $options array on construct
      */
     public $scopes = ['basic'];
     public $prompt = ['select_account', 'consent'];
-    public $advanced_scopes = [];
+    public $advancedScopes = [];
 
     private $separator = ' ';
     private $responseCode = 'error_code';
@@ -112,7 +124,7 @@ class FreelancerIdentity extends AbstractProvider {
     protected function getAuthorizationParameters(array $options) {
         $options = parent::getAuthorizationParameters($options);
         $options += ['prompt' => implode($this->separator, $this->prompt)];
-        $options += ['advanced_scopes' => implode($this->separator, $this->advanced_scopes)];
+        $options += ['advanced_scopes' => implode($this->separator, $this->advancedScopes)];
         return $options;
     }
 
@@ -139,8 +151,14 @@ class FreelancerIdentity extends AbstractProvider {
      * @throws FreelancerIdentityException when response contains error/exception
      */
     protected function checkResponse(ResponseInterface $response, $data) {
-        if (!empty($data[$this->responseCode])) {
-            throw new FreelancerIdentityException($data[$this->responseError]);
+        if (idx($data, $this->responseError)) {
+            // wrap the response error code into exception as exception code
+            $errorCode = idx($data, $this->responseCode);
+            $errorCodeId = idx(self::ERROR_MAPPING, $errorCode);
+            if (!is_numeric($errorCodeId)) {
+                $errorCodeId = null;
+            }
+            throw new FreelancerIdentityException($data[$this->responseError], $errorCodeId);
         }
     }
 
