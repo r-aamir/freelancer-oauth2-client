@@ -13,18 +13,6 @@ use League\OAuth2\Client\Grant\Exception\InvalidGrantException;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 
 class FreelancerIdentity extends AbstractProvider {
-    const ERROR_MAPPING = [
-        'INVALID_ATTRIBUTE' => 0,
-        'MISSING_REQUIRED_FIELDS' => 1,
-        'INTEGRITY_ERROR' => 2,
-        'UNAUTHORISED_ACTION' => 3,
-        'ORGANISATION_ALREADY_EXISTS' => 4,
-        'MISSING_FIELDS' => 5,
-        'UNKNOWN_ERROR' => 6,
-        'NOT_FOUND' => 7,
-        'INVALID_CLAUSE' => 8,
-        'DUPLICATE_ENTRY' => 9,
-    ];
     /**
      * scopes, prompt and advanced_scopes can be modified by
      * $options array on construct
@@ -53,7 +41,20 @@ class FreelancerIdentity extends AbstractProvider {
      */
     public function getAccessToken($grant, array $options = []) {
         try {
-            $this->accessToken = parent::getAccessToken($grant, $options);
+            $grant = $this->verifyGrant($grant);
+
+            $params = [
+                'client_id'     => $this->clientId,
+                'client_secret' => $this->clientSecret,
+                'redirect_uri'  => $this->redirectUri,
+            ];
+
+            $params = $grant->prepareRequestParameters($params, $options);
+            $request = $this->getAccessTokenRequest($params);
+            $response = $this->getResponse($request);
+            $this->accessTokenArray = $this->prepareAccessTokenResponse($response);
+            $this->accessToken = $this->createAccessToken($this->accessTokenArray, $grant);
+
             return $this->accessToken;
         } catch (BadMethodCallException $e) {
             throw new FreelancerIdentityException($e->getMessage());
@@ -154,7 +155,7 @@ class FreelancerIdentity extends AbstractProvider {
         if (idx($data, $this->responseError)) {
             // wrap the response error code into exception as exception code
             $errorCode = idx($data, $this->responseCode);
-            $errorCodeId = idx(self::ERROR_MAPPING, $errorCode);
+            $errorCodeId = idx(FreelancerIdentityException::ERROR_MAPPING, $errorCode);
             if (!is_numeric($errorCodeId)) {
                 $errorCodeId = null;
             }
@@ -173,4 +174,17 @@ class FreelancerIdentity extends AbstractProvider {
     }
 }
 
-class FreelancerIdentityException extends Exception {}
+class FreelancerIdentityException extends Exception {
+    const ERROR_MAPPING = [
+        'INVALID_ATTRIBUTE' => 0,
+        'MISSING_REQUIRED_FIELDS' => 1,
+        'INTEGRITY_ERROR' => 2,
+        'UNAUTHORISED_ACTION' => 3,
+        'ORGANISATION_ALREADY_EXISTS' => 4,
+        'MISSING_FIELDS' => 5,
+        'UNKNOWN_ERROR' => 6,
+        'NOT_FOUND' => 7,
+        'INVALID_CLAUSE' => 8,
+        'DUPLICATE_ENTRY' => 9,
+    ];
+}

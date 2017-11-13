@@ -38,7 +38,7 @@ $provider = new FreelancerIdentity([
 
 ### Authorization Code Grant
 
-The authorization code grant type is the most common grant type used when authenticating users with freelancer service. This grant type utilizes a client (this library), a server (the service provider), and a resource owner (the user with credentials to a protected—or owned—resource) to request access to resources owned by the user. This is often referred to as 3-legged OAuth, since there are three parties involved.
+The authorization code grant type is the most common grant type used when authenticating users with freelancer service. This grant type utilizes a client (this library), a server (the service provider), and a resource owner (the user with credentials to a protected or owned resource) to request access to resources owned by the user. This is often referred to as 3-legged OAuth, since there are three parties involved.
 
 ``` php
 
@@ -64,7 +64,7 @@ if (isset($_GET['error'])) {
         // Store this bearer token in your data store for future use
         // including these information
         // token_type, expires_in, scope, access_token and refresh_token
-        storeAccessTokenInYourDataStore($accessToken);
+        storeAccessTokenInYourDataStore($provider->accessTokenArray);
 
         // We have an access token, which we may use in authenticated
         // requests against the freelancer identity and freelancer API.
@@ -102,7 +102,7 @@ to call this endpoint.
 $provider = new FreelancerIdentity();
 try {
     $tokenArray = getAccessTokenFromYourDataStore();
-    $provider->setTokenFromArray($tokenArray);
+    $provider->setAccessTokenFromArray($tokenArray);
 
     if (!$provider->accessToken->hasExpired()) {
 
@@ -173,7 +173,7 @@ try {
     // Store this bearer token in your data store for future use
     // including these information
     // token_type, expires_in, scope and access_token
-    storeAccessTokenInYourDataStore($accessToken);
+    storeAccessTokenInYourDataStore($provider->accessTokenArray);
 
 } catch (FreelancerIdentityException $e) {
 
