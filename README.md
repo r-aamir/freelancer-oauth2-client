@@ -33,6 +33,7 @@ $provider = new FreelancerIdentity([
     'scopes' => [<scopes-array>], // Optional only needed when retrieve access token
     'prompt' => [<prompt-step-array>], // Optional only needed when retrieve access token
     'advanced_scopes' => [<advanced-scopes-array>], // Optional only needed when retrieve access token
+    'sandbox' => true, // to play with https://accounts.freelancer-sandbox.com
 ]);
 ```
 

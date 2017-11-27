@@ -32,8 +32,13 @@ class FreelancerIdentity extends AbstractProvider {
     public function __construct($options = []) {
         parent::__construct($options);
 
-        $this->baseUri = 'https://accounts.freelancer.com';
-        $this->apiBaseUri = 'https://api.freelancer.com/api';
+        if (idx($options, 'sandbox')) {
+            $this->baseUri = 'https://accounts.freelancer-sandbox.com';
+            $this->apiBaseUri = 'https://www.freelancer-sandbox.com/api';
+        } else {
+            $this->baseUri = 'https://accounts.freelancer.com';
+            $this->apiBaseUri = 'https://api.freelancer.com/api';
+        }
     }
 
     /**
