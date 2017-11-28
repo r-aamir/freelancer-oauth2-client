@@ -32,7 +32,8 @@ class FreelancerIdentity extends AbstractProvider {
     public function __construct($options = []) {
         parent::__construct($options);
 
-        if (idx($options, 'sandbox')) {
+        $this->prepareAdvancedScopes();
+        if (isset($options['sandbox']) && $options['sandbox']) {
             $this->baseUri = 'https://accounts.freelancer-sandbox.com';
             $this->apiBaseUri = 'https://www.freelancer-sandbox.com/api';
         } else {
@@ -157,12 +158,10 @@ class FreelancerIdentity extends AbstractProvider {
      * @throws FreelancerIdentityException when response contains error/exception
      */
     protected function checkResponse(ResponseInterface $response, $data) {
-        if (idx($data, $this->responseError)) {
-            // wrap the response error code into exception as exception code
-            $errorCode = idx($data, $this->responseCode);
-            $errorCodeId = idx(FreelancerIdentityException::ERROR_MAPPING, $errorCode);
-            if (!is_numeric($errorCodeId)) {
-                $errorCodeId = null;
+        if (isset($data[$this->responseError])) {
+            // wrap the repsonse error code into exception as exception code
+            if (isset($data[$this->responseCode])) {
+                $errorCodeId = FreelancerIdentityException::ERROR_MAPPING[$data[$this->responseCode]];
             }
             throw new FreelancerIdentityException($data[$this->responseError], $errorCodeId);
         }
@@ -176,6 +175,20 @@ class FreelancerIdentity extends AbstractProvider {
 
     protected function createResourceOwner(array $response, AccessToken $token) {
         return new GenericResourceOwner($response, $response[$this->ownerId]);
+    }
+
+    protected function prepareAdvancedScopes() {
+        $mapping = FreelancerIdentityAdvancedScope::MAPPING;
+        foreach ($this->advancedScopes as &$advancedScope) {
+            if (!is_numeric($advancedScope)) {
+                if (isset($mapping[$advancedScope])) {
+                    $advancedScope = $mapping[$advancedScope];
+                } else {
+                    throw new FreelancerIdentityException('Invalid advanced scope given.');
+                }
+
+            }
+        }
     }
 }
 
@@ -191,5 +204,16 @@ class FreelancerIdentityException extends Exception {
         'NOT_FOUND' => 7,
         'INVALID_CLAUSE' => 8,
         'DUPLICATE_ENTRY' => 9,
+    ];
+}
+
+class FreelancerIdentityAdvancedScope {
+    const MAPPING = [
+        'fln:project_create' => 1,
+        'fln:project_manage' => 2,
+        'fln:contest_create' => 3,
+        'fln:contest_manage' => 4,
+        'fln:messaging' => 5,
+        'fln:user_information' => 6,
     ];
 }
